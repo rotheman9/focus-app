@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus — AI Productivity Intelligence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            color: #ffffff;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            animation: fadeIn 1s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 60px;
+            text-align: center;
+            position: relative;
+        }
+
+        .ai-status {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            border-radius: 20px;
+            font-size: 11px;
+            color: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .time {
+            font-size: 48px;
+            font-weight: 500;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+            background: linear-gradient(180deg, #ffffff 0%, #999999 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .date {
+            font-size: 16px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 100px;
+            font-size: 13px;
+            color: #999;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .stat-badge:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .streak-flame {
+            color: #ff6b35;
+        }
+
+        .level-gem {
+            color: #a78bfa;
+        }
+
+        .points-star {
+            color: #fbbf24;
+        }
+
+        /* AI Brain Visualization */
+        .ai-brain {
+            width: 100%;
+            height: 120px;
+            margin: 30px 0;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-metrics {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Focus Section */
+        .focus-section {
+            margin-bottom: 60px;
+        }
+
+        .section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #666;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .focus-input-container {
+            position: relative;
+            margin-bottom: 40px;
+        }
+
+        .focus-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 0;
+            font-size: 28px;
+            font-weight: 300;
+            color: white;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .focus-input:focus {
+            border-bottom-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .focus-input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .focus-timer {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .timer-display {
+            font-size: 20px;
+            font-weight: 500;
+            color: #999;
+            font-variant-numeric: tabular-nums;
+            min-width: 60px;
+        }
+
+        .timer-btn {
+            padding: 10px 24px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .timer-btn:hover {
+            transform: scale(1.05);
+            background: #f0f0f0;
+        }
+
+        .timer-btn.pause {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sound-toggle {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+        }
+
+        .sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sound-toggle.muted {
+            color: #666;
+        }
+
+        /* AI Predictions */
+        .predictions-bar {
+            display: flex;
+            gap: 8px;
+            margin: 20px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+
+        .prediction {
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            font-size: 12px;
+            color: #a5b4fc;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .prediction:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Goals Section */
+        .goals-section {
+            margin-bottom: 60px;
+        }
+
+        .add-goal-container {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .add-goal-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 15px;
+            color: white;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .add-goal-input:focus {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .add-goal-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .goal-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goal-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(4px);
+        }
+
+        .goal-item.completed {
+            opacity: 0.4;
+        }
+
+        .goal-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            margin-right: 14px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .goal-item.completed .goal-checkbox {
+            background: #ffffff;
+            border-color: #ffffff;
+        }
+
+        .goal-item.completed .goal-checkbox::after {
+            content: '✓';
+            color: #000;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .goal-text {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 400;
+        }
+
+        .goal-item.completed .goal-text {
+            text-decoration: line-through;
+            color: #666;
+        }
+
+        .goal-points {
+            font-size: 12px;
+            color: #fbbf24;
+            margin-left: 8px;
+        }
+
+        .goal-priority {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .goal-priority.high {
+            background: #ff6b35;
+        }
+
+        .goal-priority.medium {
+            background: #ffd93d;
+        }
+
+        /* AI Assistant */
+        .ai-section {
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(167, 139, 250, 0.05));
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 16px;
+            margin-bottom: 40px;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .ai-indicator {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .ai-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .ai-message {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ccc;
+            white-space: pre-line;
+        }
+
+        .ai-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .ai-action-btn {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #999;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            border: none;
+        }
+
+        .ai-action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* Power-ups */
+        .powerups {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .powerup-btn {
+            flex: 1;
+            padding: 8px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(167, 139, 250, 0.2));
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .powerup-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(167, 139, 250, 0.3));
+        }
+
+        .powerup-btn.active {
+            background: linear-gradient(135deg, #667eea, #a78bfa);
+        }
+
+        /* Progress */
+        .progress-section {
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            margin-bottom: 40px;
+        }
+
+        .progress-item {
+            margin-bottom: 20px;
+        }
+
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .progress-label {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .progress-value {
+            font-size: 13px;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.8));
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+
+        /* Floating Points Animation */
+        .points-animation {
+            position: fixed;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fbbf24;
+            pointer-events: none;
+            animation: floatUp 2s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
+        }
+
+        /* Level Up Modal */
+        .level-up-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #0f0f1e);
+            border: 2px solid #a78bfa;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            z-index: 2000;
+            animation: levelUpAnimation 0.5s ease;
+        }
+
+        @keyframes levelUpAnimation {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .level-up-title {
+            font-size: 32px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .level-up-message {
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        .level-up-reward {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        /* Flow State Indicator */
+        .flow-state {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            background: rgba(167, 139, 250, 0.1);
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            color: #a78bfa;
+            display: none;
+        }
+
+        .flow-state.active {
+            display: block;
+            animation: pulse 2s infinite;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideIn 0.5s ease;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 40px 20px;
+            }
+            
+            .time {
+                font-size: 36px;
+            }
+            
+            .focus-input {
+                font-size: 24px;
+            }
+
+            .ai-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- AI Status Indicator -->
+        <div class="ai-status">
+            <div class="ai-indicator"></div>
+            <span>AI Learning Your Patterns</span>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="time" id="time">9:42</div>
+            <div class="date" id="date">Tuesday, January 14</div>
+            <div class="stats-row">
+                <div class="stat-badge" onclick="showStreakDetails()">
+                    <span class="streak-flame">🔥</span>
+                    <span id="streakCount">12 day streak</span>
+                </div>
+                <div class="stat-badge" onclick="showLevelProgress()">
+                    <span class="level-gem">💎</span>
+                    <span id="levelDisplay">Level 7</span>
+                </div>
+                <div class="stat-badge" onclick="showPointsBreakdown()">
+                    <span class="points-star">⭐</span>
+                    <span id="pointsDisplay">2,450 pts</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Brain Visualization -->
+        <div class="ai-brain">
+            <div class="ai-metrics">
+                <div class="metric">
+                    <div class="metric-value" id="focusScore">87%</div>
+                    <div class="metric-label">Focus Score</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="flowTime">47m</div>
+                    <div class="metric-label">Avg Flow State</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="completion">73%</div>
+                    <div class="metric-label">Completion Rate</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="momentum">+15%</div>
+                    <div class="metric-label">Weekly Growth</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Focus Section -->
+        <div class="focus-section">
+            <div class="section-label">Today's Focus</div>
+            <div class="focus-input-container">
+                <input 
+                    type="text" 
+                    class="focus-input" 
+                    id="focusInput"
+                    placeholder="What's the ONE thing that matters today?"
+                    onkeypress="handleFocusEnter(event)"
+                >
+            </div>
+            <div class="focus-timer">
+                <div class="timer-display" id="timerDisplay">25:00</div>
+                <button class="timer-btn" id="timerBtn" onclick="toggleTimer()">Start Focus</button>
+                <button class="sound-toggle" id="soundToggle" onclick="toggleSound()" title="Toggle tick sound">
+                    🔊
+                </button>
+            </div>
+        </div>
+
+        <!-- AI Predictions Bar -->
+        <div class="predictions-bar" id="predictionsBar">
+            <div class="prediction" onclick="adoptPrediction('Review quarterly goals')">Review quarterly goals • 85%</div>
+            <div class="prediction" onclick="adoptPrediction('Team standup preparation')">Team standup preparation • 72%</div>
+            <div class="prediction" onclick="adoptPrediction('Deep work block')">Deep work block • 94%</div>
+        </div>
+
+        <!-- AI Assistant -->
+        <div class="ai-section" id="aiSection">
+            <div class="ai-header">
+                <div class="ai-indicator"></div>
+                <div class="ai-label">AI Coach</div>
+            </div>
+            <div class="ai-message" id="aiMessage">
+                Good morning! Your cognitive performance peaks in 18 minutes. Based on your patterns, Tuesday mornings show 40% higher completion rates. Your ONE Thing approach will cascade into 3-4 easier wins today.
+            </div>
+            <div class="ai-actions">
+                <button class="ai-action-btn" onclick="predictNext()">Predict Next Task</button>
+                <button class="ai-action-btn" onclick="optimizeEnergy()">Energy Optimization</button>
+                <button class="ai-action-btn" onclick="findFlowTriggers()">Flow Triggers</button>
+                <button class="ai-action-btn" onclick="analyzeBlockers()">Remove Blockers</button>
+                <button class="ai-action-btn" onclick="suggestBreak()">Smart Break</button>
+                <button class="ai-action-btn" onclick="weeklyReview()">Weekly Insights</button>
+            </div>
+        </div>
+
+        <!-- Power-ups -->
+        <div class="powerups">
+            <div class="powerup-btn" onclick="activatePowerUp('focus', this)" title="2x points for 30 min">
+                ⚡ Focus Boost
+            </div>
+            <div class="powerup-btn" onclick="activatePowerUp('streak', this)" title="Protect your streak">
+                🛡️ Streak Shield
+            </div>
+            <div class="powerup-btn" onclick="activatePowerUp('time', this)" title="Pause time for planning">
+                ⏰ Time Freeze
+            </div>
+            <div class="powerup-btn" onclick="activatePowerUp('wisdom', this)" title="Get expert advice">
+                🧠 Wisdom Mode
+            </div>
+        </div>
+
+        <!-- Goals Section -->
+        <div class="goals-section">
+            <div class="section-label">Additional Goals</div>
+            <div class="add-goal-container">
+                <input 
+                    type="text" 
+                    class="add-goal-input" 
+                    id="goalInput"
+                    placeholder="Add a goal..."
+                    onkeypress="handleGoalEnter(event)"
+                >
+            </div>
+            <div id="goalsList">
+                <!-- Goals will be added here dynamically -->
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-section">
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span class="progress-label">Daily Progress</span>
+                    <span class="progress-value" id="dailyProgress">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="dailyProgressBar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span class="progress-label">Weekly Momentum</span>
+                    <span class="progress-value">72%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 72%"></div>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span class="progress-label">Level Progress</span>
+                    <span class="progress-value" id="levelProgress">450/500 XP</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="levelProgressBar" style="width: 90%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flow State Indicator -->
+    <div class="flow-state" id="flowState">
+        🌊 Flow State Active
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            points: 2450,
+            level: 7,
+            levelXP: 450,
+            levelXPRequired: 500,
+            streak: 12,
+            soundEnabled: true,
+            flowStateActive: false,
+            powerUps: {
+                focus: false,
+                streak: false,
+                time: false,
+                wisdom: false
+            },
+            aiMetrics: {
+                focusScore: 87,
+                avgFlowTime: 47,
+                completionRate: 73,
+                weeklyGrowth: 15
+            }
+        };
+
+        // Goals array
+        let goals = [];
+        let goalIdCounter = 0;
+
+        // Timer variables
+        let timeLeft = 25 * 60;
+        let timerInterval = null;
+        let isRunning = false;
+
+        // Audio context for sounds
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Time and Date Update
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('time').textContent = `${hours}:${minutes}`;
+            
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            document.getElementById('date').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Timer Functions
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timerBtn');
+            if (!isRunning) {
+                isRunning = true;
+                btn.textContent = 'Pause';
+                btn.classList.add('pause');
+                startTimer();
+            } else {
+                isRunning = false;
+                btn.textContent = 'Resume';
+                btn.classList.remove('pause');
+                pauseTimer();
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    if (timeLeft % 5 === 0 && gameState.soundEnabled) {
+                        playTick();
+                    }
+                } else {
+                    completeSession();
+                }
+            }, 1000);
+
+            // Check for flow state after 10 minutes
+            setTimeout(() => {
+                if (isRunning && timeLeft > 0) {
+                    enterFlowState();
+                }
+            }, 10 * 60 * 1000);
+        }
+
+        function pauseTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+        }
+
+        function completeSession() {
+            isRunning = false;
+            document.getElementById('timerBtn').textContent = 'Start Focus';
+            document.getElementById('timerBtn').classList.remove('pause');
+            clearInterval(timerInterval);
+            timeLeft = 25 * 60;
+            updateTimerDisplay();
+            
+            // Award points
+            const points = gameState.powerUps.focus ? 200 : 100;
+            addPoints(points);
+            
+            updateAI(`Excellent focus session! You earned ${points} points. ${gameState.flowStateActive ? '🌊 Flow state achieved!' : ''} Take a 5-minute break.`);
+            
+            gameState.flowStateActive = false;
+            document.getElementById('flowState').classList.remove('active');
+            
+            playCompletionSound();
+        }
+
+        function playTick() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.05);
+        }
+
+        function playCompletionSound() {
+            if (!gameState.soundEnabled) return;
+            
+            const notes = [523.25, 659.25, 783.99];
+            notes.forEach((freq, i) => {
+                setTimeout(() => {
+                    const osc = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioContext.destination);
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioContext.currentTime + 0.3);
+                }, i * 100);
+            });
+        }
+
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            const btn = document.getElementById('soundToggle');
+            btn.textContent = gameState.soundEnabled ? '🔊' : '🔇';
+            btn.classList.toggle('muted', !gameState.soundEnabled);
+        }
+
+        function enterFlowState() {
+            gameState.flowStateActive = true;
+            document.getElementById('flowState').classList.add('active');
+            updateAI("🌊 Flow state detected! You're in the zone. Distractions blocked, cognitive performance optimal.");
+            
+            // Increase focus score
+            gameState.aiMetrics.focusScore = Math.min(100, gameState.aiMetrics.focusScore + 5);
+            document.getElementById('focusScore').textContent = gameState.aiMetrics.focusScore + '%';
+        }
+
+        // Goal Management
+        function handleFocusEnter(e) {
+            if (e.key === 'Enter' && e.target.value.trim()) {
+                const text = e.target.value.trim();
+                const goal = {
+                    id: ++goalIdCounter,
+                    text: text,
+                    completed: false,
+                    priority: 'high',
+                    points: 150,
+                    isOneThing: true
+                };
+                goals.unshift(goal);
+                renderGoals();
+                e.target.value = '';
+                updateAI(`Perfect! "${text}" is your ONE thing. This high-impact task will earn you 150 points and create momentum for the day.`);
+            }
+        }
+
+        function handleGoalEnter(e) {
+            if (e.key === 'Enter' && e.target.value.trim()) {
+                addGoal(e.target.value.trim());
+                e.target.value = '';
+            }
+        }
+
+        function addGoal(text) {
+            const priority = determinePriority(text);
+            const points = priority === 'high' ? 100 : priority === 'medium' ? 60 : 30;
+            
+            const goal = {
+                id: ++goalIdCounter,
+                text: text,
+                completed: false,
+                priority: priority,
+                points: points,
+                isOneThing: false
+            };
+            
+            goals.push(goal);
+            renderGoals();
+            updateProgress();
+        }
+
+        function determinePriority(text) {
+            const textLower = text.toLowerCase();
+            if (textLower.includes('urgent') || textLower.includes('important') || textLower.includes('critical')) {
+                return 'high';
+            } else if (textLower.includes('maybe') || textLower.includes('later') || textLower.includes('sometime')) {
+                return 'low';
+            }
+            return 'medium';
+        }
+
+        function renderGoals() {
+            const container = document.getElementById('goalsList');
+            container.innerHTML = goals.map(goal => `
+                <div class="goal-item ${goal.completed ? 'completed' : ''}" onclick="toggleGoal(${goal.id})">
+                    <div class="goal-priority ${goal.priority}"></div>
+                    <div class="goal-checkbox"></div>
+                    <div class="goal-text">${goal.text}</div>
+                    <div class="goal-points">+${goal.points} pts</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleGoal(id) {
+            const goal = goals.find(g => g.id === id);
+            if (goal) {
+                goal.completed = !goal.completed;
+                renderGoals();
+                updateProgress();
+                
+                if (goal.completed) {
+                    addPoints(goal.points);
+                    updateAI(`Task completed! +${goal.points} points. ${getMotivationalMessage()}`);
+                }
+            }
+        }
+
+        function getMotivationalMessage() {
+            const messages = [
+                "Excellent progress! Each task builds momentum.",
+                "You're on fire! Keep this rhythm going.",
+                "Great work! Your consistency is paying off.",
+                "Outstanding! You're building powerful habits.",
+                "Perfect execution! This compounds into success."
+            ];
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        function addPoints(points) {
+            gameState.points += points;
+            gameState.levelXP += points;
+            
+            if (gameState.levelXP >= gameState.levelXPRequired) {
+                levelUp();
+            }
+            
+            updateDisplay();
+            showPointsAnimation(points);
+        }
+
+        function showPointsAnimation(points) {
+            const elem = document.createElement('div');
+            elem.className = 'points-animation';
+            elem.textContent = `+${points}`;
+            elem.style.left = '50%';
+            elem.style.top = '50%';
+            document.body.appendChild(elem);
+            
+            setTimeout(() => elem.remove(), 2000);
+        }
+
+        function levelUp() {
+            gameState.level++;
+            gameState.levelXP = gameState.levelXP - gameState.levelXPRequired;
+            gameState.levelXPRequired = Math.floor(gameState.levelXPRequired * 1.2);
+            
+            showLevelUpModal();
+            playLevelUpSound();
+        }
+
+        function showLevelUpModal() {
+            const modal = document.createElement('div');
+            modal.className = 'level-up-modal';
+            modal.innerHTML = `
+                <div class="level-up-title">LEVEL UP!</div>
+                <div class="level-up-message">You've reached Level ${gameState.level}</div>
+                <div class="level-up-reward">🎉</div>
+                <button class="timer-btn" onclick="this.parentElement.remove()">Awesome!</button>
+            `;
+            document.body.appendChild(modal);
+            
+            setTimeout(() => modal.remove(), 5000);
+        }
+
+        function playLevelUpSound() {
+            if (!gameState.soundEnabled) return;
+            
+            const notes = [261.63, 329.63, 392.00, 523.25];
+            notes.forEach((freq, i) => {
+                setTimeout(() => {
+                    const osc = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioContext.destination);
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioContext.currentTime + 0.3);
+                }, i * 100);
+            });
+        }
+
+        function updateProgress() {
+            const total = goals.length;
+            const completed = goals.filter(g => g.completed).length;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            document.getElementById('dailyProgress').textContent = `${percentage}%`;
+            document.getElementById('dailyProgressBar').style.width = `${percentage}%`;
+            
+            // Update completion metric
+            gameState.aiMetrics.completionRate = percentage;
+            document.getElementById('completion').textContent = `${percentage}%`;
+        }
+
+        function updateDisplay() {
+            document.getElementById('pointsDisplay').textContent = `${gameState.points.toLocaleString()} pts`;
+            document.getElementById('levelDisplay').textContent = `Level ${gameState.level}`;
+            document.getElementById('streakCount').textContent = `${gameState.streak} day streak`;
+            document.getElementById('levelProgress').textContent = `${gameState.levelXP}/${gameState.levelXPRequired} XP`;
+            document.getElementById('levelProgressBar').style.width = `${(gameState.levelXP / gameState.levelXPRequired) * 100}%`;
+        }
+
+        // AI Functions
+        function updateAI(message) {
+            document.getElementById('aiMessage').textContent = message;
+        }
+
+        function predictNext() {
+            const predictions = [
+                "Email review and response batch (85% confidence)",
+                "Strategic planning for Q2 (78% confidence)",
+                "Team performance reviews (72% confidence)"
+            ];
+            
+            updateAI(`Based on your patterns, I predict your next tasks:
+                
+${predictions.join('\n')}
+
+Your Tuesday pattern suggests focusing on strategic work now will cascade into easier afternoon tasks.`);
+        }
+
+        function optimizeEnergy() {
+            const hour = new Date().getHours();
+            const energyLevel = hour < 12 ? 'High' : hour < 15 ? 'Medium' : 'Low';
+            
+            updateAI(`Energy Optimization Report:
+                
+Current Energy: ${energyLevel}
+Peak Hours Today: 9:00-11:00, 14:00-15:00
+
+Recommended Schedule:
+1. Complete ONE thing now (${energyLevel} energy)
+2. Batch emails at 2 PM (Low energy task)
+3. Creative work at 3 PM (Second peak)
+
+You're 23% more productive when tasks match energy levels.`);
+        }
+
+        function findFlowTriggers() {
+            updateAI(`Your Flow State Triggers:
+                
+• Clear, challenging goals (not too easy, not too hard)
+• Uninterrupted time blocks (minimum 25 minutes)
+• Morning hours (9-11 AM)
+• After physical exercise
+• Classical or focus music
+• Single-tasking with notifications off
+
+Current flow probability: 73%
+You achieve flow 3x more often in the morning.`);
+        }
+
+        function analyzeBlockers() {
+            updateAI(`Productivity Blockers Detected:
+                
+• Context Switching (High impact)
+  → Solution: Batch similar tasks together
+  
+• Decision Fatigue (Medium impact)
+  → Solution: Plan tomorrow tonight
+  
+• Energy Misalignment (Medium impact)
+  → Solution: Move complex tasks to morning
+
+Removing these could increase output by 31%.`);
+        }
+
+        function suggestBreak() {
+            const breakTypes = [
+                "5-minute walk outside - restores 23% cognitive capacity",
+                "Deep breathing (4-7-8 technique) - reduces stress by 15%",
+                "Hydration and stretching - improves focus for next session"
+            ];
+            
+            const suggestion = breakTypes[Math.floor(Math.random() * breakTypes.length)];
+            
+            updateAI(`Smart Break Recommendation:
+                
+Suggested: ${suggestion}
+
+Resume work at ${new Date(Date.now() + 5 * 60000).toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'})}.
+
+Your productivity increases 18% after strategic breaks.`);
+        }
+
+        function weeklyReview() {
+            updateAI(`Weekly Intelligence Report:
+                
+📊 Performance Metrics:
+• 42 tasks completed (↑18% from last week)
+• Average focus: 47 minutes
+• Best day: Tuesdays
+• Flow states achieved: 5 times
+
+🧠 AI Insights:
+• Your productivity peaks between 9-11 AM
+• Compound effect momentum: +24% daily
+• You're in the top 13% of users
+
+🎯 Next Week Prediction:
+78% likely to exceed this week if you maintain morning focus blocks.`);
+        }
+
+        function activatePowerUp(type, element) {
+            if (gameState.powerUps[type]) {
+                updateAI("This power-up is already active!");
+                return;
+            }
+            
+            gameState.powerUps[type] = true;
+            element.classList.add('active');
+            
+            const messages = {
+                focus: "Focus Boost activated! 2x points for 30 minutes.",
+                streak: "Streak Shield activated! Your streak is protected today.",
+                time: "Time Freeze activated! Take time to plan without pressure.",
+                wisdom: "Wisdom Mode activated! Enhanced AI insights enabled."
+            };
+            
+            updateAI(messages[type]);
+            
+            // Deactivate after 30 minutes (except streak shield)
+            if (type !== 'streak') {
+                setTimeout(() => {
+                    gameState.powerUps[type] = false;
+                    element.classList.remove('active');
+                }, 30 * 60 * 1000);
+            }
+        }
+
+        function adoptPrediction(text) {
+            document.getElementById('goalInput').value = text;
+            updateAI(`Prediction adopted: "${text}". Press Enter to add it to your goals.`);
+        }
+
+        function showStreakDetails() {
+            updateAI(`🔥 ${gameState.streak}-Day Streak Analysis:
+                
+• Compound momentum: +${gameState.streak * 2}% daily efficiency
+• Habit formation strength: ${Math.min(100, gameState.streak * 3)}%
+• Next milestone: ${30 - gameState.streak} days to "Unstoppable" achievement
+
+Your consistency is in the top ${100 - Math.min(99, gameState.streak * 2)}% of all users.`);
+        }
+
+        function showLevelProgress() {
+            const tasksToLevel = Math.ceil((gameState.levelXPRequired - gameState.levelXP) / 50);
+            updateAI(`Level ${gameState.level} Progress:
+                
+• Current XP: ${gameState.levelXP}/${gameState.levelXPRequired}
+• Tasks to next level: ~${tasksToLevel}
+• Level velocity: ${(gameState.levelXP / gameState.level / 100).toFixed(2)} levels/week
+
+You're leveling 23% faster than average.`);
+        }
+
+        function showPointsBreakdown() {
+            updateAI(`Points Intelligence:
+                
+• Total: ${gameState.points.toLocaleString()}
+• Today: ~250 points
+• Average per task: ${Math.round(gameState.points / Math.max(1, goalIdCounter))}
+• Streak bonus: ${gameState.streak * 2}%
+
+Point velocity increasing 15% week-over-week.`);
+        }
+
+        // Show notification function
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <strong>🎯 AI Assistant</strong>
+                <p style="margin-top: 5px; font-size: 14px;">${message}</p>
+                <button class="btn" onclick="this.parentElement.remove()">Got it</button>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize
+        updateTimerDisplay();
+        updateDisplay();
+
+        // Periodic AI updates
+        setInterval(() => {
+            const messages = [
+                `Pattern detected: Your next hour has high productivity potential. Focus probability: 82%.`,
+                `Energy optimization: Consider a 5-minute break in ${Math.floor(Math.random() * 20 + 10)} minutes.`,
+                `Your consistency score improved by 3% today. This compounds into lasting change.`,
+                `Insight: Tasks completed before noon have 25% higher quality scores.`
+            ];
+            
+            if (Math.random() > 0.8) {
+                showNotification(messages[Math.floor(Math.random() * messages.length)]);
+            }
+        }, 60000);
+
+        // Welcome message
+        setTimeout(() => {
+            showNotification("Welcome back! Your peak performance window starts in 15 minutes. Ready to achieve flow state?");
+        }, 2000);
+    </script>
+</body>
+</html>
