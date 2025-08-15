@@ -836,15 +836,75 @@
     <div class="flow-state" id="flowState">
         🌊 Flow State Active
     </div>
+    
+    <!-- Data Management Buttons -->
+    <div style="position: fixed; bottom: 20px; left: 20px; display: flex; gap: 10px;">
+        <button class="btn" onclick="exportData()" title="Export your data">
+            💾 Export
+        </button>
+        <button class="btn" onclick="document.getElementById('importFile').click()" title="Import backup">
+            📂 Import
+        </button>
+        <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(this.files[0])">
+        <button class="btn" onclick="resetProgress()" title="Reset all progress">
+            🔄 Reset
+        </button>
+    </div>
 
     <script>
-        // Game State
-        let gameState = {
-            points: 2450,
-            level: 7,
-            levelXP: 450,
-            levelXPRequired: 500,
-            streak: 12,
+        // LocalStorage Key
+        const STORAGE_KEY = 'focusAppData';
+        
+        // Load saved data or use defaults
+        function loadGameState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    // Check if it's from today
+                    const today = new Date().toDateString();
+                    if (data.lastSaved !== today) {
+                        // New day - reset daily progress but keep streak
+                        data.gameState.streak = calculateStreak(data.lastSaved);
+                        data.goals = data.goals.filter(g => g.isOneThing || !g.completed);
+                        data.gameState.powerUps = {
+                            focus: false,
+                            streak: false,
+                            time: false,
+                            wisdom: false
+                        };
+                    }
+                    return data;
+                } catch (e) {
+                    console.error('Failed to load saved data:', e);
+                }
+            }
+            return null;
+        }
+        
+        function calculateStreak(lastSaved) {
+            const last = new Date(lastSaved);
+            const today = new Date();
+            const diffTime = Math.abs(today - last);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) {
+                return gameState.streak + 1; // Consecutive day
+            } else if (diffDays > 1) {
+                return 1; // Streak broken, start over
+            }
+            return gameState.streak; // Same day
+        }
+        
+        // Load saved data or initialize defaults
+        const savedData = loadGameState();
+        
+        let gameState = savedData?.gameState || {
+            points: 0,
+            level: 1,
+            levelXP: 0,
+            levelXPRequired: 100,
+            streak: 1,
             soundEnabled: true,
             flowStateActive: false,
             powerUps: {
@@ -854,16 +914,148 @@
                 wisdom: false
             },
             aiMetrics: {
-                focusScore: 87,
-                avgFlowTime: 47,
-                completionRate: 73,
-                weeklyGrowth: 15
-            }
+                focusScore: 50,
+                avgFlowTime: 25,
+                completionRate: 0,
+                weeklyGrowth: 0
+            },
+            totalTasksCompleted: 0,
+            totalFocusSessions: 0,
+            totalFocusTime: 0,
+            bestStreak: 1,
+            achievements: {},
+            firstVisit: new Date().toISOString()
         };
 
         // Goals array
-        let goals = [];
-        let goalIdCounter = 0;
+        let goals = savedData?.goals || [];
+        let goalIdCounter = savedData?.goalIdCounter || 0;
+        
+        // Statistics tracking
+        let statistics = savedData?.statistics || {
+            dailyStats: {},
+            weeklyStats: {},
+            monthlyStats: {},
+            allTimeStats: {
+                totalPoints: gameState.points,
+                totalTasks: gameState.totalTasksCompleted,
+                totalFocusMinutes: 0,
+                averageTasksPerDay: 0,
+                mostProductiveHour: 9,
+                mostProductiveDay: 'Monday'
+            }
+        };
+        
+        // Save state to localStorage
+        function saveState() {
+            const dataToSave = {
+                gameState: gameState,
+                goals: goals,
+                goalIdCounter: goalIdCounter,
+                statistics: statistics,
+                lastSaved: new Date().toDateString(),
+                version: '1.0.0'
+            };
+            
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+                // Show save indicator
+                showSaveIndicator();
+            } catch (e) {
+                console.error('Failed to save data:', e);
+                if (e.name === 'QuotaExceededError') {
+                    // Clear old data if storage is full
+                    clearOldData();
+                }
+            }
+        }
+        
+        // Auto-save every 30 seconds
+        setInterval(saveState, 30000);
+        
+        // Save on important events
+        function saveOnEvent() {
+            saveState();
+        }
+        
+        // Show save indicator
+        function showSaveIndicator() {
+            const indicator = document.createElement('div');
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                padding: 5px 10px;
+                background: rgba(74, 222, 128, 0.2);
+                border: 1px solid rgba(74, 222, 128, 0.5);
+                border-radius: 5px;
+                color: #4ade80;
+                font-size: 12px;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease;
+            `;
+            indicator.textContent = '✓ Saved';
+            document.body.appendChild(indicator);
+            
+            setTimeout(() => indicator.remove(), 2000);
+        }
+        
+        // Clear old data if needed
+        function clearOldData() {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            // Keep only last 30 days of statistics
+            if (statistics.dailyStats) {
+                Object.keys(statistics.dailyStats).forEach(date => {
+                    if (new Date(date) < thirtyDaysAgo) {
+                        delete statistics.dailyStats[date];
+                    }
+                });
+            }
+            
+            saveState();
+        }
+        
+        // Export data function
+        function exportData() {
+            const dataStr = JSON.stringify({
+                gameState,
+                goals,
+                statistics,
+                exportDate: new Date().toISOString()
+            }, null, 2);
+            
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `focus-app-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            updateAI('Data exported successfully! Keep this file safe for backup.');
+        }
+        
+        // Import data function
+        function importData(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    gameState = imported.gameState || gameState;
+                    goals = imported.goals || goals;
+                    statistics = imported.statistics || statistics;
+                    
+                    saveState();
+                    updateDisplay();
+                    renderGoals();
+                    updateAI('Data imported successfully! Your progress has been restored.');
+                } catch (error) {
+                    updateAI('Failed to import data. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        }
 
         // Timer variables
         let timeLeft = 25 * 60;
@@ -942,6 +1134,17 @@
             document.getElementById('timerBtn').textContent = 'Start Focus';
             document.getElementById('timerBtn').classList.remove('pause');
             clearInterval(timerInterval);
+            
+            // Track focus session
+            gameState.totalFocusSessions++;
+            gameState.totalFocusTime += 25;
+            
+            const today = new Date().toDateString();
+            if (!statistics.dailyStats[today]) {
+                statistics.dailyStats[today] = { points: 0, tasks: 0, focusMinutes: 0 };
+            }
+            statistics.dailyStats[today].focusMinutes += 25;
+            
             timeLeft = 25 * 60;
             updateTimerDisplay();
             
@@ -955,6 +1158,7 @@
             document.getElementById('flowState').classList.remove('active');
             
             playCompletionSound();
+            saveOnEvent(); // Save after session
         }
 
         function playTick() {
@@ -1085,7 +1289,17 @@
                 
                 if (goal.completed) {
                     addPoints(goal.points);
+                    gameState.totalTasksCompleted++;
+                    
+                    // Update daily stats
+                    const today = new Date().toDateString();
+                    if (!statistics.dailyStats[today]) {
+                        statistics.dailyStats[today] = { points: 0, tasks: 0, focusMinutes: 0 };
+                    }
+                    statistics.dailyStats[today].tasks++;
+                    
                     updateAI(`Task completed! +${goal.points} points. ${getMotivationalMessage()}`);
+                    saveOnEvent(); // Save after completing task
                 }
             }
         }
@@ -1105,12 +1319,21 @@
             gameState.points += points;
             gameState.levelXP += points;
             
+            // Update statistics
+            statistics.allTimeStats.totalPoints = gameState.points;
+            const today = new Date().toDateString();
+            if (!statistics.dailyStats[today]) {
+                statistics.dailyStats[today] = { points: 0, tasks: 0, focusMinutes: 0 };
+            }
+            statistics.dailyStats[today].points += points;
+            
             if (gameState.levelXP >= gameState.levelXPRequired) {
                 levelUp();
             }
             
             updateDisplay();
             showPointsAnimation(points);
+            saveOnEvent(); // Save after adding points
         }
 
         function showPointsAnimation(points) {
@@ -1373,6 +1596,29 @@ Point velocity increasing 15% week-over-week.`);
         // Initialize
         updateTimerDisplay();
         updateDisplay();
+        
+        // Update best streak
+        if (gameState.streak > (gameState.bestStreak || 1)) {
+            gameState.bestStreak = gameState.streak;
+        }
+        
+        // Reset function
+        function resetProgress() {
+            if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
+        }
+        
+        // Save before page unload
+        window.addEventListener('beforeunload', saveState);
+        
+        // Track page visibility to save when switching tabs
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                saveState();
+            }
+        });
 
         // Periodic AI updates
         setInterval(() => {
@@ -1380,7 +1626,8 @@ Point velocity increasing 15% week-over-week.`);
                 `Pattern detected: Your next hour has high productivity potential. Focus probability: 82%.`,
                 `Energy optimization: Consider a 5-minute break in ${Math.floor(Math.random() * 20 + 10)} minutes.`,
                 `Your consistency score improved by 3% today. This compounds into lasting change.`,
-                `Insight: Tasks completed before noon have 25% higher quality scores.`
+                `Insight: Tasks completed before noon have 25% higher quality scores.`,
+                `Total progress saved: ${gameState.totalTasksCompleted} tasks, ${gameState.totalFocusSessions} focus sessions.`
             ];
             
             if (Math.random() > 0.8) {
@@ -1388,10 +1635,24 @@ Point velocity increasing 15% week-over-week.`);
             }
         }, 60000);
 
-        // Welcome message
+        // Welcome message - check if first time or returning user
         setTimeout(() => {
-            showNotification("Welcome back! Your peak performance window starts in 15 minutes. Ready to achieve flow state?");
+            if (savedData) {
+                const tasksToday = goals.filter(g => g.completed).length;
+                showNotification(`Welcome back! You've completed ${tasksToday} tasks today. Your ${gameState.streak}-day streak continues!`);
+            } else {
+                showNotification("Welcome to Focus! Your progress will be saved automatically. Let's build your first streak!");
+            }
         }, 2000);
+        
+        // Show current stats in console for debugging
+        console.log('Focus App Loaded:', {
+            points: gameState.points,
+            level: gameState.level,
+            streak: gameState.streak,
+            totalTasks: gameState.totalTasksCompleted,
+            savedGoals: goals.length
+        });
     </script>
 </body>
 </html>
