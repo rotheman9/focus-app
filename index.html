@@ -835,6 +835,23 @@
                     
                     if (hasSubtasks && goal.expanded) {
                         html += '<div class="subtasks-container">';
+                        
+                        // Show sources if available
+                        if (goal.sources && goal.sources.length > 0 && goal.breakdownSettings?.showSources === 'on') {
+                            html += `
+                                <div style="margin-bottom: 15px; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; border: 1px solid rgba(102, 126, 234, 0.2);">
+                                    <div style="font-size: 11px; color: #a5b4fc; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">🔍 Research Sources</div>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                        ${goal.sources.map(source => `
+                                            <a href="${source.url}" target="_blank" style="padding: 4px 8px; background: rgba(102, 126, 234, 0.2); border-radius: 4px; color: #a5b4fc; text-decoration: none; font-size: 11px; border: 1px solid rgba(102, 126, 234, 0.3);">
+                                                ${source.title || 'Source'}
+                                            </a>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
                         html += goal.subtasks.map(st => `
                             <div class="subtask-item ${st.completed ? 'completed' : ''}" 
                                  onclick="Goals.toggleSubtask(${goal.id}, ${st.id})">
@@ -948,6 +965,7 @@
                 document.getElementById('contextStatus').innerHTML = `
                     <div class="ai-thinking">
                         🤖 AI is researching "${goal.text}" and generating a smart breakdown...
+                        <br><small style="opacity: 0.8;">🔍 Searching web for best practices and current information...</small>
                     </div>
                 `;
                 
@@ -970,7 +988,10 @@
                     
                     if (response.ok) {
                         const data = await response.json();
+                        console.log('AI API Response:', data); // Debug log
+                        
                         const aiBreakdown = data.breakdown || [];
+                        const sources = data.sources || [];
                         
                         // Apply user preferences to AI results
                         let subtasks = this.processAIBreakdown(aiBreakdown, detailLevel, maxSubtasks, timeCap);
@@ -984,14 +1005,14 @@
                             timeCap,
                             showSources
                         };
-                        goal.sources = showSources === 'on' ? (data.sources || []) : [];
+                        goal.sources = showSources === 'on' ? sources : [];
                         
                         this.closeModal();
                         Goals.render();
                         State.save();
                         
-                        // Show success notification
-                        this.showBreakdownSuccess(goal.text, subtasks.length);
+                        // Show success notification with source info
+                        this.showBreakdownSuccess(goal.text, subtasks.length, sources.length);
                         
                     } else {
                         throw new Error(`API error: ${response.status}`);
@@ -1161,6 +1182,8 @@
             },
             
             processAIBreakdown(aiBreakdown, detailLevel, maxSubtasks, timeCap) {
+                console.log('Processing AI breakdown:', aiBreakdown); // Debug log
+                
                 // Convert AI breakdown to our format
                 let subtasks = aiBreakdown.map((task, index) => ({
                     id: Date.now() + index,
@@ -1168,7 +1191,8 @@
                     estimatedTime: task.estimatedTime || task.time || 15,
                     priority: task.priority || 'medium',
                     completed: false,
-                    points: Math.floor(100 / Math.max(1, aiBreakdown.length))
+                    points: Math.floor(100 / Math.max(1, aiBreakdown.length)),
+                    dependsOn: task.dependsOn || []
                 }));
                 
                 // Apply detail level adjustments
@@ -1183,10 +1207,11 @@
                 // Apply time cap
                 subtasks = this.applyTimeCap(subtasks, timeCap);
                 
+                console.log('Processed subtasks:', subtasks); // Debug log
                 return subtasks;
             },
             
-            showBreakdownSuccess(taskText, subtaskCount) {
+            showBreakdownSuccess(taskText, subtaskCount, sourceCount) {
                 // Create success notification
                 const notification = document.createElement('div');
                 notification.style.cssText = `
@@ -1210,6 +1235,7 @@
                             <p style="color: #ccc; margin: 0; font-size: 14px;">
                                 "${taskText}" broken down into ${subtaskCount} smart micro-tasks
                             </p>
+                            ${sourceCount > 0 ? `<p style="color: #86efac; margin: 5px 0 0 0; font-size: 12px;">📚 Research backed by ${sourceCount} sources</p>` : ''}
                         </div>
                     </div>
                 `;
