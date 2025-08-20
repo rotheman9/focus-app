@@ -24,18 +24,38 @@ async function webSearch(task) {
   const apiKey = process.env.SERPAPI_API_KEY;
   if (apiKey) {
     try {
-      const q = encodeURIComponent(`${task} requirements best practices checklist steps plan`);
-      const url = `https://serpapi.com/search.json?engine=google&q=${q}&num=5&api_key=${apiKey}`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        const results = (data.organic_results || []).slice(0, 5).map(r => ({
-          title: r.title,
-          link: r.link,
-          snippet: r.snippet || ""
-        }));
-        if (results.length) return results;
+      // More specific search queries for better results
+      const searchQueries = [
+        `${task} step by step guide 2024`,
+        `${task} best practices tutorial`,
+        `${task} implementation checklist`,
+        `${task} project requirements breakdown`,
+        `${task} development roadmap`
+      ];
+      
+      let allResults = [];
+      
+      for (const query of searchQueries) {
+        const q = encodeURIComponent(query);
+        const url = `https://serpapi.com/search.json?engine=google&q=${q}&num=3&api_key=${apiKey}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          const results = (data.organic_results || []).map(r => ({
+            title: r.title,
+            link: r.link,
+            snippet: r.snippet || ""
+          }));
+          allResults = allResults.concat(results);
+        }
       }
+      
+      // Remove duplicates and return top results
+      const uniqueResults = allResults.filter((result, index, self) => 
+        index === self.findIndex(r => r.link === result.link)
+      );
+      
+      if (uniqueResults.length) return uniqueResults.slice(0, 8);
     } catch (_) {}
   }
 
@@ -82,7 +102,7 @@ function buildPrompt(task, pages) {
       .join("\n\n");
   }
 
-  const prompt = `You are an expert project planner and researcher. Create a precise, actionable micro-task plan that reflects real-world best practices.
+  const prompt = `You are an expert project planner and researcher. Create a precise, actionable micro-task plan that reflects real-world best practices and current industry standards.
 
 Primary task: "${task}"
 
@@ -99,15 +119,33 @@ Return ONLY valid JSON matching this TypeScript type:
   }>
 }
 
+CRITICAL REQUIREMENTS:
+• Generate SPECIFIC, ACTIONABLE steps, not generic concepts
+• Each task should be something you can actually DO right now
+• Include concrete deliverables and measurable outcomes
+• Use current best practices and modern tools/technologies
+• Research the specific domain if needed to provide accurate steps
+
+For technical projects, include:
+• Specific tool setup and configuration steps
+• Exact commands or code snippets where relevant
+• Modern frameworks, libraries, and best practices
+• Testing, deployment, and monitoring specifics
+• Security and performance considerations
+
+For business/creative projects, include:
+• Research and validation steps
+• Specific planning and documentation tasks
+• Execution and iteration phases
+• Quality assurance and feedback loops
+• Launch and measurement strategies
+
 Guidelines:
-• First do a quick mental model: define the concept, typical deliverables, and success criteria (implicit).
-• Cover end-to-end lifecycle: discovery/research, planning/specs, environment setup, core execution, quality (testing/accessibility), performance, security, documentation, and delivery/launch.
-• If the task is technical (e.g., "build a website"), include essential best practices (e.g., responsive layout, accessibility/WCAG, SEO basics, analytics, performance budgets, version control, CI checks, deployment & rollback).
-• Include 7–12 micro-tasks that are specific and outcome-driven.
-• Estimate realistic durations (15–90 minutes each).
-• Prefer parallelizable tasks when possible.
-• Include dependencies by index (0-based) if a task requires another to be done first.
-• Assume a single competent person.
+• 8-15 micro-tasks that are specific and outcome-driven
+• Estimate realistic durations (15–120 minutes each)
+• Include dependencies by index (0-based) if a task requires another first
+• Assume a competent person with basic tools
+• Focus on what makes THIS specific project unique
 • No commentary, no markdown — just JSON.`;
   return prompt;
 }

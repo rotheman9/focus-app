@@ -979,13 +979,16 @@
                 
                 const goal = this.currentGoal;
                 
-                // Show AI thinking status
-                document.getElementById('contextStatus').innerHTML = `
-                    <div class="ai-thinking">
-                        🤖 AI is researching "${goal.text}" and generating a smart breakdown...
-                        <br><small style="opacity: 0.8;">🔍 Searching web for best practices and current information...</small>
-                    </div>
-                `;
+                                        // Show AI thinking status
+                        document.getElementById('contextStatus').innerHTML = `
+                            <div class="ai-thinking">
+                                🤖 AI is researching "${goal.text}" and generating a smart breakdown...
+                                <br><small style="opacity: 0.8;">🔍 Searching web for best practices and current information...</small>
+                            </div>
+                        `;
+                        
+                        // Test: Show current sources setting
+                        console.log('Modal opened with showSources setting:', showSources);
                 
                 try {
                     // Call the research-powered AI API
@@ -1023,19 +1026,54 @@
                             timeCap,
                             showSources
                         };
-                        goal.sources = showSources === 'on' ? sources : [];
+                        
+                        // Ensure sources are properly stored
+                        if (showSources === 'on' && sources && sources.length > 0) {
+                            goal.sources = sources;
+                            console.log('Sources stored successfully:', goal.sources);
+                            
+                            // Test: Show sources in modal before closing
+                            document.getElementById('contextStatus').innerHTML = `
+                                <div style="color: #4ade80; padding: 15px; background: rgba(74, 222, 128, 0.1); border-radius: 8px; margin: 15px 0;">
+                                    <h4 style="margin: 0 0 10px 0; color: #4ade80;">✅ AI Breakdown Complete!</h4>
+                                    <p style="margin: 0 0 10px 0; color: #ccc;">Generated ${subtasks.length} specific micro-tasks</p>
+                                    <div style="margin-top: 15px;">
+                                        <strong style="color: #4ade80;">🔍 Research Sources Found:</strong>
+                                        <div style="margin-top: 8px;">
+                                            ${sources.map(source => `
+                                                <a href="${source.url}" target="_blank" style="display: block; padding: 8px; background: rgba(102, 126, 234, 0.1); border-radius: 6px; color: #a5b4fc; text-decoration: none; margin: 5px 0; border: 1px solid rgba(102, 126, 234, 0.2);">
+                                                    📚 ${source.title || 'Source'}
+                                                </a>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Wait 3 seconds to show sources, then close
+                            setTimeout(() => {
+                                this.closeModal();
+                                Goals.render();
+                                State.save();
+                                this.showBreakdownSuccess(goal.text, subtasks.length, goal.sources.length);
+                            }, 3000);
+                            
+                        } else {
+                            goal.sources = [];
+                            console.log('No sources to store or sources disabled');
+                            
+                            // Close immediately if no sources
+                            this.closeModal();
+                            Goals.render();
+                            State.save();
+                            this.showBreakdownSuccess(goal.text, subtasks.length, 0);
+                        }
                         
                         // Debug logging
                         console.log('Goal after AI breakdown:', goal);
                         console.log('Sources stored:', goal.sources);
                         console.log('Show sources setting:', showSources);
-                        
-                        this.closeModal();
-                        Goals.render();
-                        State.save();
-                        
-                        // Show success notification with source info
-                        this.showBreakdownSuccess(goal.text, subtasks.length, sources.length);
+                        console.log('Original sources from API:', sources);
                         
                     } else {
                         throw new Error(`API error: ${response.status}`);
