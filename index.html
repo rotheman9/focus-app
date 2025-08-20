@@ -625,6 +625,13 @@
                     const saved = localStorage.getItem('focusApp');
                     if (saved) {
                         this.data = JSON.parse(saved);
+                        console.log('Loaded state with goals:', this.data.goals);
+                        // Check if sources are preserved
+                        this.data.goals.forEach(goal => {
+                            if (goal.sources) {
+                                console.log('Goal', goal.id, 'has sources:', goal.sources);
+                            }
+                        });
                     }
                 } catch (e) {
                     console.error('Error loading data:', e);
@@ -633,7 +640,9 @@
             
             save() {
                 try {
+                    console.log('Saving state with goals:', this.data.goals);
                     localStorage.setItem('focusApp', JSON.stringify(this.data));
+                    console.log('State saved successfully');
                 } catch (e) {
                     console.error('Error saving data:', e);
                 }
@@ -837,7 +846,10 @@
                         html += '<div class="subtasks-container">';
                         
                         // Show sources if available
+                        console.log('Rendering goal:', goal.id, 'Sources:', goal.sources, 'Settings:', goal.breakdownSettings);
+                        
                         if (goal.sources && goal.sources.length > 0 && goal.breakdownSettings?.showSources === 'on') {
+                            console.log('Displaying sources for goal:', goal.id);
                             html += `
                                 <div style="margin-bottom: 15px; padding: 10px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; border: 1px solid rgba(102, 126, 234, 0.2);">
                                     <div style="font-size: 11px; color: #a5b4fc; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">🔍 Research Sources</div>
@@ -850,6 +862,12 @@
                                     </div>
                                 </div>
                             `;
+                        } else {
+                            console.log('No sources to display for goal:', goal.id, 'Reason:', {
+                                hasSources: !!goal.sources,
+                                sourcesLength: goal.sources?.length,
+                                showSources: goal.breakdownSettings?.showSources
+                            });
                         }
                         
                         html += goal.subtasks.map(st => `
@@ -1006,6 +1024,11 @@
                             showSources
                         };
                         goal.sources = showSources === 'on' ? sources : [];
+                        
+                        // Debug logging
+                        console.log('Goal after AI breakdown:', goal);
+                        console.log('Sources stored:', goal.sources);
+                        console.log('Show sources setting:', showSources);
                         
                         this.closeModal();
                         Goals.render();
